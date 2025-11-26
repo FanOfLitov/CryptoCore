@@ -3,7 +3,6 @@
 import sys
 import os
 
-# Add src directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from cli_parser import parse_cli_args
@@ -14,10 +13,20 @@ from modes.cbc import cbc_encrypt, cbc_decrypt
 from modes.cfb import cfb_encrypt, cfb_decrypt
 from modes.ofb import ofb_encrypt, ofb_decrypt
 from modes.ctr import ctr_encrypt, ctr_decrypt
+from hash.sha256 import sha256_file
+from hash.sha3_256 import sha3_256_file
 
 
-def get_crypto_functions(mode, operation):
-    """Return appropriate encryption/decryption functions based on mode"""
+def handle_encryption(args, input_data):
+    """Handle encryption operation"""
+    if args.key:
+        key_bytes = bytes.fromhex(args.key)
+        generated_key = None
+    else:
+        generated_key = generate_key()
+        key_bytes = generated_key
+        print(f"[INFO] Generated random key: {generated_key.hex()}")
+
     crypto_functions = {
         'ecb': (ecb_encrypt, ecb_decrypt),
         'cbc': (cbc_encrypt, cbc_decrypt),
@@ -26,23 +35,7 @@ def get_crypto_functions(mode, operation):
         'ctr': (ctr_encrypt, ctr_decrypt),
     }
 
-    return crypto_functions.get(mode, (None, None))
-
-
-def handle_encryption(args, input_data):
-    """Handle encryption operation"""
-    # Generate or use provided key
-    if args.key:
-        key_bytes = bytes.fromhex(args.key)
-        generated_key = None
-    else:
-        generated_key = generate_key()
-        key_bytes = generated_key
-        # Print generated key to stdout
-        key_hex = generated_key.hex()
-        print(f"[INFO] Generated random key: {key_hex}")
-
-    encrypt_func, _ = get_crypto_functions(args.mode, 'encrypt')
+    encrypt_func, _ = crypto_functions.get(args.mode, (None, None))
 
     if not encrypt_func:
         print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
@@ -54,66 +47,90 @@ def handle_encryption(args, input_data):
 
 def handle_decryption(args, input_data):
     """Handle decryption operation"""
-    # Key is required for decryption
     key_bytes = bytes.fromhex(args.key)
 
-    _, decrypt_func = get_crypto_functions(args.mode, 'decrypt')
+    crypto_functions = {
+        'ecb': (ecb_encrypt, ecb_decrypt),
+        'cbc': (cbc_encrypt, cbc_decrypt),
+        'cfb': (cfb_encrypt, cfb_decrypt),
+        'ofb': (ofb_encrypt, ofb_decrypt),
+        'ctr': (ctr_encrypt, ctr_decrypt),
+    }
+
+    _, decrypt_func = crypto_functions.get(args.mode, (None, None))
 
     if not decrypt_func:
         print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
         sys.exit(1)
 
-    # Handle IV for different modes
     if args.mode == 'ecb':
-        # ECB doesn't use IV
         return decrypt_func(key_bytes, input_data), None
     else:
-        # For other modes, handle IV
         if args.iv:
-            # IV provided via CLI
             iv_bytes = bytes.fromhex(args.iv)
             ciphertext_with_iv = iv_bytes + input_data
         else:
-            # IV should be in the file
             if len(input_data) < 16:
-                print(f"Error: Input file too short to contain IV (minimum 16 bytes required)", file=sys.stderr)
+                print(f"Error: Input file too short to contain IV", file=sys.stderr)
                 sys.exit(1)
             ciphertext_with_iv = input_data
 
         return decrypt_func(key_bytes, ciphertext_with_iv), None
 
 
+def handle_hash(args):
+    """Handle hash computation"""
+    hash_functions = {
+        'sha256': sha256_file,
+        'sha3-256': sha3_256_file,
+    }
+
+    hash_func = hash_functions.get(args.algorithm)
+    if not hash_func:
+        print(f"Error: Unsupported hash algorithm {args.algorithm}", file=sys.stderr)
+        sys.exit(1)
+
+    # Compute hash
+    hash_value = hash_func(args.input)
+
+    # Format: HASH_VALUE INPUT_FILE_PATH
+    output_line = f"{hash_value} {args.input}\n"
+
+    # Output to file or stdout
+    if args.output:
+        with open(args.output, 'w') as f:
+            f.write(output_line)
+        print(f"Hash written to: {args.output}")
+    else:
+        print(output_line, end='')
+
+    return hash_value
+
+
 def main():
-    """
-    Main entry point for CryptoCore
-    """
+    """Main entry point"""
     try:
-        # Parse command line arguments
         args = parse_cli_args()
 
-        # Read input file
-        input_data = read_file_binary(args.input)
+        if args.command == 'dgst':
+            handle_hash(args)
+        else:  # encryption/decryption
+            input_data = read_file_binary(args.input)
 
-        # Perform encryption or decryption
-        if args.encrypt:
-            output_data, generated_key = handle_encryption(args, input_data)
-        else:  # decrypt
-            try:
+            if args.encrypt:
+                output_data, _ = handle_encryption(args, input_data)
+            else:
                 output_data, _ = handle_decryption(args, input_data)
-            except ValueError as e:
-                print(f"Decryption error: {e}", file=sys.stderr)
-                sys.exit(1)
 
-        # Write output file
-        write_file_binary(args.output, output_data)
-
-        print(f"Success: {'Encrypted' if args.encrypt else 'Decrypted'} {args.input} -> {args.output}")
+            write_file_binary(args.output, output_data)
+            operation = 'Encrypted' if args.encrypt else 'Decrypted'
+            print(f"Success: {operation} {args.input} -> {args.output}")
 
     except KeyboardInterrupt:
-        print("\nOperation cancelled by user", file=sys.stderr)
+        print("\nOperation cancelled", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"Unexpected error: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
 
