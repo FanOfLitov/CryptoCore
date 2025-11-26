@@ -9,6 +9,62 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from cli_parser import parse_cli_args
 from file_io import read_file_binary, write_file_binary
 from modes.ecb import ecb_encrypt, ecb_decrypt
+from modes.cbc import cbc_encrypt, cbc_decrypt
+from modes.cfb import cfb_encrypt, cfb_decrypt
+from modes.ofb import ofb_encrypt, ofb_decrypt
+from modes.ctr import ctr_encrypt, ctr_decrypt
+
+
+def get_crypto_functions(mode, operation):
+    """Return appropriate encryption/decryption functions based on mode"""
+    crypto_functions = {
+        'ecb': (ecb_encrypt, ecb_decrypt),
+        'cbc': (cbc_encrypt, cbc_decrypt),
+        'cfb': (cfb_encrypt, cfb_decrypt),
+        'ofb': (ofb_encrypt, ofb_decrypt),
+        'ctr': (ctr_encrypt, ctr_decrypt),
+    }
+
+    return crypto_functions.get(mode, (None, None))
+
+
+def handle_encryption(args, key_bytes, input_data):
+    """Handle encryption operation"""
+    encrypt_func, _ = get_crypto_functions(args.mode, 'encrypt')
+
+    if not encrypt_func:
+        print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
+        sys.exit(1)
+
+    return encrypt_func(key_bytes, input_data)
+
+
+def handle_decryption(args, key_bytes, input_data):
+    """Handle decryption operation"""
+    _, decrypt_func = get_crypto_functions(args.mode, 'decrypt')
+
+    if not decrypt_func:
+        print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
+        sys.exit(1)
+
+    # Handle IV for different modes
+    if args.mode == 'ecb':
+        # ECB doesn't use IV
+        return decrypt_func(key_bytes, input_data)
+    else:
+        # For other modes, handle IV
+        if args.iv:
+            # IV provided via CLI
+            iv_bytes = bytes.fromhex(args.iv)
+            ciphertext_with_iv = iv_bytes + input_data
+        else:
+            # IV should be in the file
+            if len(input_data) < 16:
+                print(f"Error: Input file too short to contain IV (minimum 16 bytes required)", file=sys.stderr)
+                sys.exit(1)
+            ciphertext_with_iv = input_data
+
+        return decrypt_func(key_bytes, ciphertext_with_iv)
 
 
 def main():
@@ -27,22 +83,12 @@ def main():
 
         # Perform encryption or decryption
         if args.encrypt:
-            if args.algorithm == 'aes' and args.mode == 'ecb':
-                output_data = ecb_encrypt(key_bytes, input_data)
-            else:
-                print(f"Error: Unsupported algorithm/mode combination: {args.algorithm}/{args.mode}",
-                      file=sys.stderr)
-                sys.exit(1)
+            output_data = handle_encryption(args, key_bytes, input_data)
         else:  # decrypt
-            if args.algorithm == 'aes' and args.mode == 'ecb':
-                try:
-                    output_data = ecb_decrypt(key_bytes, input_data)
-                except ValueError as e:
-                    print(f"Decryption error: {e}", file=sys.stderr)
-                    sys.exit(1)
-            else:
-                print(f"Error: Unsupported algorithm/mode combination: {args.algorithm}/{args.mode}",
-                      file=sys.stderr)
+            try:
+                output_data = handle_decryption(args, key_bytes, input_data)
+            except ValueError as e:
+                print(f"Decryption error: {e}", file=sys.stderr)
                 sys.exit(1)
 
         # Write output file
