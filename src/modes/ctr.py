@@ -1,12 +1,12 @@
 from Crypto.Cipher import AES
-import os
+from ..csprng import generate_random_bytes
 import struct
 
 
 def ctr_encrypt(key, plaintext):
     """Encrypt using AES-CTR mode (stream cipher, no padding)"""
-    # Generate random IV (nonce)
-    nonce = os.urandom(8)
+    # Generate random nonce using CSPRNG (8 bytes for CTR)
+    nonce = generate_random_bytes(8)
     counter = 0
 
     cipher = AES.new(key, AES.MODE_ECB)
@@ -29,9 +29,3 @@ def ctr_encrypt(key, plaintext):
         counter += 1
 
     return nonce + b''.join(ciphertext_blocks)
-
-
-def ctr_decrypt(key, ciphertext):
-    """Decrypt using AES-CTR mode (same as encryption)"""
-    # CTR decryption is identical to encryption
-    return ctr_encrypt(key, ciphertext)

@@ -1,11 +1,11 @@
 from Crypto.Cipher import AES
-import os
+from ..csprng import generate_iv
 
 
 def ofb_encrypt(key, plaintext):
     """Encrypt using AES-OFB mode (stream cipher, no padding)"""
-    # Generate random IV
-    iv = os.urandom(16)
+    # Generate random IV using CSPRNG
+    iv = generate_iv()
 
     cipher = AES.new(key, AES.MODE_ECB)
     ciphertext_blocks = []
@@ -26,9 +26,3 @@ def ofb_encrypt(key, plaintext):
         feedback = keystream_block
 
     return iv + b''.join(ciphertext_blocks)
-
-
-def ofb_decrypt(key, ciphertext):
-    """Decrypt using AES-OFB mode (same as encryption)"""
-    # OFB decryption is identical to encryption
-    return ofb_encrypt(key, ciphertext)

@@ -1,13 +1,17 @@
 # CryptoCore
 
-A command-line file encryption tool implementing AES-128 in multiple modes.
+A command-line file encryption tool implementing AES-128 in multiple modes with secure random key generation.
 
-## Supported Modes
-- ECB (Electronic Codebook) - Sprint 1
-- CBC (Cipher Block Chaining) - Sprint 2  
-- CFB (Cipher Feedback) - Sprint 2
-- OFB (Output Feedback) - Sprint 2
-- CTR (Counter) - Sprint 2
+## Features
+- **AES-128** encryption in multiple modes: ECB, CBC, CFB, OFB, CTR
+- **Secure random key generation** using cryptographically secure PRNG
+- **PKCS#7 padding** for block cipher modes
+- **Interoperability** with OpenSSL
+
+## Security
+- Uses `os.urandom()` for cryptographically secure random number generation
+- Keys and IVs are generated using operating system's CSPRNG
+- Weak key detection with warnings for insecure patterns
 
 ## Build Instructions
 
