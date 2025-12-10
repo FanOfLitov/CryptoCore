@@ -26,3 +26,24 @@ def ofb_encrypt(key, plaintext):
         feedback = keystream_block
 
     return iv + b''.join(ciphertext_blocks)
+
+
+def ofb_decrypt(key, ciphertext):
+    """Decrypt AES-OFB (identical to encrypt)"""
+    iv = ciphertext[:16]
+    ciphertext = ciphertext[16:]
+
+    cipher = AES.new(key, AES.MODE_ECB)
+    feedback = iv
+    plaintext_blocks = []
+
+    for i in range(0, len(ciphertext), 16):
+        block = ciphertext[i:i+16]
+
+        keystream_block = cipher.encrypt(feedback)
+        plaintext_block = bytes(a ^ b for a, b in zip(block, keystream_block))
+        plaintext_blocks.append(plaintext_block)
+
+        feedback = keystream_block  # OFB updates feedback with keystream
+
+    return b"".join(plaintext_blocks)

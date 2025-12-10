@@ -1,44 +1,22 @@
 import os
-import sys
 
-
-def generate_random_bytes(num_bytes):
-    """
-    Generates cryptographically secure random bytes using os.urandom()
-
-    Args:
-        num_bytes: Number of random bytes to generate
-
-    Returns:
-        bytes: Cryptographically secure random bytes
-
-    Raises:
-        RuntimeError: If random bytes cannot be generated
+def generate_random_bytes(num_bytes: int) -> bytes:
+    """Generate cryptographically secure random bytes.
+    Requirements: RNG-1…RNG-6  (Sprint 3)
     """
     if num_bytes <= 0:
-        raise ValueError("Number of bytes must be positive")
+        raise ValueError("num_bytes must be positive")
 
     try:
         return os.urandom(num_bytes)
     except Exception as e:
-        raise RuntimeError(f"Failed to generate random bytes: {e}")
+        raise RuntimeError(f"CSPRNG failure: {e}")
 
 
-def generate_key():
-    """
-    Generate a random 16-byte AES-128 key
+def generate_iv() -> bytes:
+    """Generate IV for AES block modes (16 bytes)"""
+    return os.urandom(16)
 
-    Returns:
-        bytes: 16-byte key
-    """
-    return generate_random_bytes(16)
-
-
-def generate_iv():
-    """
-    Generate a random 16-byte IV
-
-    Returns:
-        bytes: 16-byte IV
-    """
-    return generate_random_bytes(16)
+def generate_key() -> bytes:
+    """Returns a 16-byte AES-128 key."""
+    return os.urandom(16)

@@ -29,3 +29,26 @@ def ctr_encrypt(key, plaintext):
         counter += 1
 
     return nonce + b''.join(ciphertext_blocks)
+
+
+def ctr_decrypt(key, ciphertext):
+    """Decrypt AES-CTR (same as encrypt)"""
+    nonce = ciphertext[:8]
+    ciphertext = ciphertext[8:]
+
+    cipher = AES.new(key, AES.MODE_ECB)
+    counter = 0
+    plaintext_blocks = []
+
+    for i in range(0, len(ciphertext), 16):
+        block = ciphertext[i:i+16]
+
+        counter_block = nonce + struct.pack('<Q', counter)
+        keystream_block = cipher.encrypt(counter_block)
+
+        plaintext_block = bytes(a ^ b for a, b in zip(block, keystream_block))
+        plaintext_blocks.append(plaintext_block)
+
+        counter += 1
+
+    return b"".join(plaintext_blocks)

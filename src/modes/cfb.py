@@ -26,3 +26,24 @@ def cfb_encrypt(key, plaintext):
         feedback = ciphertext_block
 
     return iv + b''.join(ciphertext_blocks)
+
+
+def cfb_decrypt(key, ciphertext):
+    """Decrypt AES-CFB"""
+    iv = ciphertext[:16]
+    ciphertext = ciphertext[16:]
+
+    cipher = AES.new(key, AES.MODE_ECB)
+    feedback = iv
+    plaintext_blocks = []
+
+    for i in range(0, len(ciphertext), 16):
+        block = ciphertext[i:i+16]
+
+        keystream_block = cipher.encrypt(feedback)
+        plaintext_block = bytes(a ^ b for a, b in zip(block, keystream_block))
+        plaintext_blocks.append(plaintext_block)
+
+        feedback = block  # CFB updates feedback with ciphertext
+
+    return b"".join(plaintext_blocks)

@@ -29,3 +29,27 @@ def cbc_encrypt(key, plaintext):
 
     # Return IV + ciphertext
     return iv + b''.join(ciphertext_blocks)
+
+def cbc_decrypt(key, ciphertext):
+    """Decrypt AES-CBC"""
+    iv = ciphertext[:16]
+    ciphertext = ciphertext[16:]
+
+    cipher = AES.new(key, AES.MODE_ECB)
+
+    previous_block = iv
+    plaintext_blocks = []
+
+    for i in range(0, len(ciphertext), 16):
+        block = ciphertext[i:i+16]
+
+        decrypted_block = cipher.decrypt(block)
+
+        # XOR with previous ciphertext block (or IV)
+        plaintext_block = bytes(a ^ b for a, b in zip(decrypted_block, previous_block))
+
+        plaintext_blocks.append(plaintext_block)
+        previous_block = block
+
+    padded = b"".join(plaintext_blocks)
+    return pkcs7_unpad(padded)

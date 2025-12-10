@@ -17,15 +17,20 @@ from hash.sha256 import sha256_file
 from hash.sha3_256 import sha3_256_file
 
 
-def handle_encryption(args, input_data):
-    """Handle encryption operation"""
-    if args.key:
-        key_bytes = bytes.fromhex(args.key)
-        generated_key = None
-    else:
-        generated_key = generate_key()
-        key_bytes = generated_key
-        print(f"[INFO] Generated random key: {generated_key.hex()}")
+def extract_iv(ciphertext: bytes) -> tuple[bytes, bytes]:
+    """Extract IV (first 16 bytes). Ensures file is long enough."""
+    if len(ciphertext) < 16:
+        raise ValueError("Input file too short to contain IV (need ≥ 16 bytes)")
+    return ciphertext[:16], ciphertext[16:]
+
+
+def handle_decryption(args, input_data):
+    """Handle decryption operation with automatic IV extraction."""
+
+    if not args.key:
+        raise ValueError("Key is required for decryption")
+
+    key_bytes = bytes.fromhex(args.key)
 
     crypto_functions = {
         'ecb': (ecb_encrypt, ecb_decrypt),
@@ -35,14 +40,32 @@ def handle_encryption(args, input_data):
         'ctr': (ctr_encrypt, ctr_decrypt),
     }
 
-    encrypt_func, _ = crypto_functions.get(args.mode, (None, None))
+    _, decrypt_func = crypto_functions.get(args.mode, (None, None))
+    if not decrypt_func:
+        raise ValueError(f"Unsupported mode {args.mode}")
 
-    if not encrypt_func:
-        print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
-        sys.exit(1)
+    # ECB: no IV
+    if args.mode == 'ecb':
+        return decrypt_func(key_bytes, input_data), None
 
-    output_data = encrypt_func(key_bytes, input_data)
-    return output_data, generated_key
+    # OTHER MODES: must handle IV
+    if args.iv:
+        # explicit IV from user
+        iv_bytes = bytes.fromhex(args.iv)
+        ciphertext = input_data
+    else:
+        # IO-2: Read IV from file
+        iv_bytes, ciphertext = extract_iv(input_data)
+
+    # (IO-3) IV must be 16 bytes
+    if len(iv_bytes) != 16:
+        raise ValueError("IV must be exactly 16 bytes")
+
+    # decrypt_func for your modes expects: (key, iv + ciphertext)
+    combined = iv_bytes + ciphertext
+
+    plaintext = decrypt_func(key_bytes, combined)
+    return plaintext, None
 
 
 def handle_decryption(args, input_data):

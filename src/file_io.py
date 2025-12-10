@@ -44,3 +44,15 @@ def write_file_binary(filename, data):
     except Exception as e:
         print(f"Error writing file '{filename}': {e}", file=sys.stderr)
         sys.exit(1)
+
+
+def pkcs7_pad(data: bytes, block_size: int = 16) -> bytes:
+    pad_len = block_size - (len(data) % block_size)
+    return data + bytes([pad_len]) * pad_len
+
+
+def pkcs7_unpad(data: bytes) -> bytes:
+    pad_len = data[-1]
+    if pad_len < 1 or pad_len > 16:
+        raise ValueError("Invalid padding")
+    return data[:-pad_len]
