@@ -1,14 +1,15 @@
 import argparse
-import sys
 import os
-from csprng import generate_key
+import sys
 
 
 def parse_cli_args():
+
     parser = argparse.ArgumentParser(
         description='CryptoCore - File encryption and hashing tool',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
+        
 Examples:
   # Encryption with automatic key generation
   cryptocore --algorithm aes --mode cbc --encrypt --input file.txt --output file.enc
@@ -41,6 +42,11 @@ Examples:
     hash_parser.add_argument('--input', required=True)
     hash_parser.add_argument('--output', help='Output file for hash (default: stdout)')
 
+    #5 мелстоун
+    hash_parser.add_argument('--hmac', action='store_true', help='Enable HMAC mode')
+    hash_parser.add_argument('--key', help='HMAC key as hex string')
+    hash_parser.add_argument('--verify', help='Verify HMAC from file')
+
     args = parser.parse_args()
 
     # Handle no command provided
@@ -49,6 +55,16 @@ Examples:
         sys.exit(1)
 
     # Validate encryption-specific arguments
+    if args.command == 'dgst' and args.hmac:
+        if not args.key:
+            print("Error: --key is required when using --hmac", file=sys.stderr)
+            sys.exit(1)
+        try:
+            bytes.fromhex(args.key)
+        except ValueError:
+            print("Error: HMAC key must be a hexadecimal string", file=sys.stderr)
+            sys.exit(1)
+
     if args.command == 'encrypt':
         if args.key and not validate_key(args.key):
             print(f"Error: Key must be a 32-character hexadecimal string", file=sys.stderr)

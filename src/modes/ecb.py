@@ -1,5 +1,6 @@
 from Crypto.Cipher import AES
-from src.file_io import pkcs7_pad, pkcs7_unpad
+
+from ..file_io import pkcs7_pad, pkcs7_unpad
 
 class ECBMode:
     def __init__(self, key: bytes):

@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
-import sys
 import os
+import sys
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from .cli_parser import parse_cli_args
+from .file_io import read_file_binary, write_file_binary
+from .csprng import generate_key
+from .modes.ecb import ecb_encrypt, ecb_decrypt
+from .modes.cbc import cbc_encrypt, cbc_decrypt
+from .modes.cfb import cfb_encrypt, cfb_decrypt
+from .modes.ofb import ofb_encrypt, ofb_decrypt
+from .modes.ctr import ctr_encrypt, ctr_decrypt
 
-from cli_parser import parse_cli_args
-from file_io import read_file_binary, write_file_binary
-from csprng import generate_key
-from modes.ecb import ecb_encrypt, ecb_decrypt
-from modes.cbc import cbc_encrypt, cbc_decrypt
-from modes.cfb import cfb_encrypt, cfb_decrypt
-from modes.ofb import ofb_encrypt, ofb_decrypt
-from modes.ctr import ctr_encrypt, ctr_decrypt
-from hash.sha256 import sha256_file
-from hash.sha3_256 import sha3_256_file
+
+
+from .hash.sha256 import sha256_file
+from .hash.sha3_256 import sha3_256_file
 
 
 def extract_iv(ciphertext: bytes) -> tuple[bytes, bytes]:
@@ -102,7 +103,55 @@ def handle_decryption(args, input_data):
 
 
 def handle_hash(args):
-    """Handle hash computation"""
+    """Handle hash and HMAC computation"""
+
+    from .mac.hmac import HMAC
+    from .file_io import read_file_binary
+    from .hash.sha256 import sha256_file
+    from .hash.sha3_256 import sha3_256_file
+
+    # Read input file as bytes (IMPORTANT for HMAC)
+    file_bytes = read_file_binary(args.input)
+
+    # -------------------------
+    # HMAC MODE
+    # -------------------------
+    if args.hmac:
+        key = bytes.fromhex(args.key)
+        hmac = HMAC(key)
+        result = hmac.hexdigest(file_bytes)
+
+        output_line = f"{result} {args.input}\n"
+
+        # VERIFY MODE
+        if args.verify:
+            with open(args.verify, 'r') as f:
+                expected = f.read().strip().split()[0]
+
+            print(f"[DEBUG] computed = '{result}'")
+            print(f"[DEBUG] expected = '{expected}'")
+            print(f"[DEBUG] computed len = {len(result)}")
+            print(f"[DEBUG] expected len = {len(expected)}")
+
+            if result == expected:
+                print("[OK] HMAC verification successful")
+                sys.exit(0)
+            else:
+                print("[ERROR] HMAC verification failed", file=sys.stderr)
+                sys.exit(1)
+
+        # NORMAL OUTPUT
+        if args.output:
+            with open(args.output, 'w') as f:
+                f.write(output_line)
+        else:
+            print(output_line, end='')
+
+        return result
+
+    # -------------------------
+    # NORMAL HASH MODE
+    # -------------------------
     hash_functions = {
         'sha256': sha256_file,
         'sha3-256': sha3_256_file,
@@ -113,21 +162,39 @@ def handle_hash(args):
         print(f"Error: Unsupported hash algorithm {args.algorithm}", file=sys.stderr)
         sys.exit(1)
 
-    # Compute hash
     hash_value = hash_func(args.input)
-
-    # Format: HASH_VALUE INPUT_FILE_PATH
     output_line = f"{hash_value} {args.input}\n"
 
-    # Output to file or stdout
     if args.output:
         with open(args.output, 'w') as f:
             f.write(output_line)
-        print(f"Hash written to: {args.output}")
     else:
         print(output_line, end='')
 
     return hash_value
+
+
+def handle_encryption(args, input_data):
+    if args.key:
+        key_bytes = bytes.fromhex(args.key)
+    else:
+        key_bytes = generate_key()
+        print(f"[INFO] Generated random key: {key_bytes.hex()}")
+
+    crypto_functions = {
+        'ecb': ecb_encrypt,
+        'cbc': cbc_encrypt,
+        'cfb': cfb_encrypt,
+        'ofb': ofb_encrypt,
+        'ctr': ctr_encrypt,
+    }
+
+    encrypt_func = crypto_functions.get(args.mode)
+    if not encrypt_func:
+        raise ValueError(f"Unsupported mode {args.mode}")
+
+    output = encrypt_func(key_bytes, input_data)
+    return output, None
 
 
 def main():

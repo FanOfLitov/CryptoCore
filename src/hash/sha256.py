@@ -1,5 +1,5 @@
-import struct
 import binascii
+import struct
 
 
 class SHA256:

@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES
-from ..csprng import generate_iv
+
 from .ecb import pkcs7_pad, pkcs7_unpad
+from ..csprng import generate_iv
 
 
 def cbc_encrypt(key, plaintext):
