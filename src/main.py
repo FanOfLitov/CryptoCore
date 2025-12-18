@@ -125,15 +125,25 @@ def handle_hash(args):
 
         # VERIFY MODE
         if args.verify:
-            with open(args.verify, 'r') as f:
-                expected = f.read().strip().split()[0]
+            with open(args.verify, 'rb') as f:
+                data = f.read()
 
-            print(f"[DEBUG] computed = '{result}'")
-            print(f"[DEBUG] expected = '{expected}'")
-            print(f"[DEBUG] computed len = {len(result)}")
-            print(f"[DEBUG] expected len = {len(expected)}")
+            # Extract hex characters only, in order
+            hex_chars = []
+            for b in data:
+                c = chr(b)
+                if c in '0123456789abcdefABCDEF':
+                    hex_chars.append(c)
+                    if len(hex_chars) == 64:
+                        break
 
-            if result == expected:
+            expected = ''.join(hex_chars)
+
+            if len(expected) != 64:
+                print("Error: Invalid HMAC file format", file=sys.stderr)
+                sys.exit(1)
+
+            if result.lower() == expected.lower():
                 print("[OK] HMAC verification successful")
                 sys.exit(0)
             else:

@@ -130,3 +130,12 @@ def derive_output_filename(input_path, is_encrypt):
             return input_path[:-4] + '.dec'
         else:
             return input_path + '.dec'
+
+def validate_hex_len(hex_str, expected_len):
+    if len(hex_str) != expected_len:
+        return False
+    try:
+        bytes.fromhex(hex_str)
+        return True
+    except ValueError:
+        return False
