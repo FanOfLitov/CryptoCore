@@ -214,4 +214,5 @@ Milestone 6: AEAD через Encrypt-then-MAC + tamper tests
 Milestone 7: PBKDF2 + HKDF + RFC тесты + интеграция
 Milestone 8: Документация, полировка, единый способ запуска, инструкции по тестам
 
+<img width="1296" height="669" alt="image" src="https://github.com/user-attachments/assets/0f504dd9-878b-44a2-8df7-0e103ba386ea" />
 
