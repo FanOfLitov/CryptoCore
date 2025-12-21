@@ -3,7 +3,7 @@ CryptoCore — учебный криптопроект (AES modes / SHA / HMAC /
 
 
 1. Краткое описание
--------------------
+
 CryptoCore — консольный инструмент на Python, реализующий:
 
 1) Симметричное шифрование AES:
@@ -78,7 +78,8 @@ CryptoCore/
  
 
 3. Требования и запуск
-----------------------
+
+
 3.1. Python
 - Python 3.x
 
@@ -99,7 +100,7 @@ CryptoCore/
 Примеры ниже предполагают, что вы находитесь в корне проекта.
 
 4.1. Хэширование (dgst)
------------------------
+
 SHA-256:
   python -m src.main dgst --algorithm sha256 --input test.txt
 
@@ -110,7 +111,7 @@ SHA3-256:
   <hex_hash> <filename>
 
 4.2. HMAC (dgst --hmac)
------------------------
+
 HMAC-SHA256 от файла:
   python -m src.main dgst --algorithm sha256 --hmac --key <HEX_KEY> --input test.txt
 
@@ -133,7 +134,7 @@ HMAC-SHA256 от файла:
   он извлекает первые 64 hex-символа из файла подписи и сравнивает с вычисленным тегом.
 
 4.3. Шифрование (encrypt)
--------------------------
+
 Базовый формат:
   python -m src.main encrypt --algorithm aes --mode <MODE> --encrypt --key <HEX_KEY> --input plain.txt --output out.bin
   python -m src.main encrypt --algorithm aes --mode <MODE> --decrypt --key <HEX_KEY> --input out.bin --output dec.txt
@@ -149,7 +150,7 @@ MODE ∈ { ecb, cbc, cfb, ofb, ctr }
   и записывается в начало шифртекста. Поэтому дешифрование “знает”, что брать из начала.
 
 4.4. AEAD (Encrypt-then-MAC) — Milestone 6
--------------------------------------------
+
 AEAD включается флагом --aead.
 
 Идея:
@@ -169,7 +170,7 @@ AEAD включается флагом --aead.
   Authentication failed (HMAC tag mismatch)
 
 5. KDF — Milestone 7 (PBKDF2 + HKDF)
-------------------------------------
+
 5.1. PBKDF2 (пароль → мастер‑ключ)
 PBKDF2 используется, чтобы получить криптографически сильный ключ из пароля.
 
@@ -189,7 +190,7 @@ HKDF используется для корректного разделения
 В AEAD EtM это критично: нельзя использовать один и тот же ключ и для AES, и для HMAC.
 
 6. Тестирование
----------------
+
 Все тесты запускаются из корня проекта:
 
   python -m tests.test_basik
@@ -210,7 +211,7 @@ HKDF используется для корректного разделения
 - test_hkdf: HKDF RFC тест-вектор
 
 7. Типовые проблемы и решения
------------------------------
+
 7.1. “No module named 'src'”
 - Запускайте из корня проекта и через -m:
   python -m src.main ...
@@ -225,7 +226,7 @@ HKDF используется для корректного разделения
 - В проекте verify реализован устойчиво: достаёт первые 64 hex-символа из файла подписи.
 
 8. Соответствие мейлстоунам 
-------------------------------------
+
 Milestone 1: AES-ECB + PKCS#7 + CLI + базовые тесты
 Milestone 2: CBC/CFB/OFB/CTR + тесты режимов
 Milestone 3: CSPRNG (os.urandom) + тесты
