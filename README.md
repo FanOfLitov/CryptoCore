@@ -34,27 +34,48 @@ CryptoCore — консольный инструмент на Python, реали
 
 CryptoCore/
  ├─ src/
+
+ 
  │   ├─ __init__.py
- │   ├─ main.py                 # точка входа CLI
+ 
+ │   ├─ main.py      # точка входа CLI
  │   ├─ cli_parser.py           # argparse + валидация аргументов
+ 
  │   ├─ file_io.py              # чтение/запись файлов, PKCS#7 pad/unpad
+ 
  │   ├─ csprng.py               # генерация ключей/IV/nonce через os.urandom
+ 
  │   ├─ modes/                  # режимы AES: ecb/cbc/cfb/ofb/ctr
+
+ 
  │   ├─ hash/                   # sha256 и sha3_256
+ 
  │   ├─ mac/                    # hmac
+ 
  │   ├─ aead/                   # etm (Encrypt-then-MAC)
+ 
  │   └─ kdf/                    # pbkdf2 и hkdf
+ 
  ├─ tests/
  │   ├─ __init__.py
  │   ├─ test_basik.py           # базовые тесты (ECB/padding/файлы)
+ 
  │   ├─ test_modes.py           # CBC/CFB/OFB/CTR round-trip
+ 
  │   ├─ test_hash.py            # SHA-256/SHA3-256 тест-вектора и avalanche
+ 
  │   ├─ test_hmac.py            # HMAC тест-вектора + verify
+ 
  │   ├─ test_aead.py            # AEAD EtM + tamper tests
+ 
  │   ├─ test_pbkdf2.py          # PBKDF2 RFC тест-вектор
+ 
  │   └─ test_hkdf.py            # HKDF RFC тест-вектор
+ 
  ├─ docs/                       # документация (опционально)
+ 
  └─ README_RU.txt               # этот файл
+ 
 
 3. Требования и запуск
 ----------------------
