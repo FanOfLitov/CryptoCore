@@ -12,7 +12,6 @@ from hash.sha3_256 import SHA3_256, sha3_256_hash, sha3_256_file
 
 
 def test_sha256_known_answers():
-    """Test SHA-256 with known test vectors"""
     print("Testing SHA-256 known answers...")
 
     # NIST test vectors
@@ -51,7 +50,6 @@ def test_sha3_256_known_answers():
 
 
 def test_avalanche_effect():
-    """Test that changing one bit produces completely different hash"""
     print("Testing avalanche effect...")
 
     original_data = b"Hello, world!"
@@ -68,7 +66,7 @@ def test_avalanche_effect():
     print(f"  SHA-256 bits changed: {diff_count}/256")
     assert 100 < diff_count < 156, f"SHA-256 avalanche effect weak: {diff_count} bits changed"
 
-    # Test SHA3-256
+
     hash1 = sha3_256_hash(original_data)
     hash2 = sha3_256_hash(modified_data)
 
@@ -83,7 +81,6 @@ def test_avalanche_effect():
 
 
 def test_file_hashing():
-    """Test file hashing functionality"""
     print("Testing file hashing...")
 
     with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -91,12 +88,12 @@ def test_file_hashing():
         f.write(b"Test file content for hashing")
 
     try:
-        # Test SHA-256 file hashing
+
         sha256_result = sha256_file(test_file)
         expected_sha256 = sha256_hash(b"Test file content for hashing")
         assert sha256_result == expected_sha256, "SHA-256 file hashing failed"
 
-        # Test SHA3-256 file hashing
+
         sha3_result = sha3_256_file(test_file)
         expected_sha3 = sha3_256_hash(b"Test file content for hashing")
         assert sha3_result == expected_sha3, "SHA3-256 file hashing failed"
@@ -107,7 +104,7 @@ def test_file_hashing():
 
 
 def test_interoperability():
-    """Test interoperability with system tools"""
+
     print("Testing interoperability...")
 
     with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -115,10 +112,10 @@ def test_interoperability():
         f.write(b"Interoperability test data")
 
     try:
-        # Test SHA-256 with sha256sum
+
         our_hash = sha256_file(test_file)
 
-        # Get system hash (if available)
+
         try:
             result = subprocess.run(['sha256sum', test_file], capture_output=True, text=True)
             if result.returncode == 0:
@@ -136,7 +133,6 @@ def test_interoperability():
 
 
 def main():
-    """Run all hash tests"""
     print("Running hash function tests...\n")
 
     try:
@@ -150,10 +146,10 @@ def main():
         print()
         test_interoperability()
 
-        print("\n🎉 All hash tests passed!")
+        print("\n All hash tests passed!")
 
     except Exception as e:
-        print(f"\n❌ Test failed: {e}")
+        print(f"\n Test failed: {e}")
         sys.exit(1)
 
 

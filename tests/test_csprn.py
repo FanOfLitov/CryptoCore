@@ -10,7 +10,6 @@ from csprng import generate_random_bytes, generate_key
 
 
 def test_key_uniqueness():
-    """Test that generated keys are unique"""
     print("Testing key uniqueness...")
 
     key_set = set()
@@ -20,7 +19,6 @@ def test_key_uniqueness():
         key = generate_key()
         key_hex = key.hex()
 
-        # Check for uniqueness
         assert key_hex not in key_set, f"Duplicate key found: {key_hex}"
         key_set.add(key_hex)
 
@@ -31,16 +29,15 @@ def test_key_uniqueness():
 
 
 def test_bit_distribution():
-    """Test that bits are approximately 50% ones and zeros"""
+
     print("Testing bit distribution...")
 
     total_bits = 0
     total_ones = 0
 
-    # Generate large amount of random data
     random_data = generate_random_bytes(10000)  # 10KB
 
-    # Count bits
+
     for byte in random_data:
         total_bits += 8
         total_ones += bin(byte).count('1')
@@ -55,7 +52,6 @@ def test_bit_distribution():
 
 
 def test_nist_preparation():
-    """Generate a large random file for NIST testing"""
     print("Generating NIST test data...")
 
     total_size = 10_000_000  # 10 MB
@@ -81,7 +77,6 @@ def test_nist_preparation():
 
 
 def test_error_handling():
-    """Test error handling for invalid inputs"""
     print("Testing error handling...")
 
     try:
@@ -112,7 +107,7 @@ def main():
         print()
         test_nist_preparation()
 
-        print("\n🎉 All CSPRNG tests passed!")
+        print("\nAll CSPRNG tests passed!")
         print("\nNext steps:")
         print("1. Run NIST STS on the generated 'nist_test_data.bin'")
         print("2. Follow NIST STS documentation for statistical testing")

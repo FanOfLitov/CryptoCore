@@ -38,10 +38,8 @@ def test_all_modes_roundtrip():
         print(f"  Testing {mode_name.upper()} mode...")
 
         for i, data in enumerate(test_data):
-            # Encrypt
             ciphertext = encrypt_func(key, data)
 
-            # Decrypt
             plaintext = decrypt_func(key, ciphertext)
 
             assert plaintext == data, f"{mode_name} round-trip failed for test {i + 1}"
@@ -51,11 +49,9 @@ def test_all_modes_roundtrip():
 
 
 def test_openssl_interoperability():
-    """Test interoperability with OpenSSL"""
+
     print("Testing OpenSSL interoperability...")
 
-    # This would require actual OpenSSL commands
-    # Implementation depends on system setup
     print("  Note: OpenSSL tests require manual verification")
     print("  See README.md for interoperability test commands")
 

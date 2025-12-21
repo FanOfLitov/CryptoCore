@@ -12,7 +12,6 @@ from src.modes.ecb import ecb_encrypt, ecb_decrypt
 from src.file_io import pkcs7_pad, pkcs7_unpad
 
 def test_padding():
-    """Test PKCS#7 padding and unpadding"""
     print("Testing PKCS#7 padding...")
 
     # Test various data lengths
@@ -35,7 +34,7 @@ def test_padding():
 
 
 def test_encrypt_decrypt_roundtrip():
-    """Test that encrypting then decrypting returns original data"""
+
     print("Testing encrypt/decrypt round-trip...")
 
     # Test data of various sizes
@@ -62,7 +61,6 @@ def test_encrypt_decrypt_roundtrip():
 
 
 def test_file_operations():
-    """Test file encryption and decryption"""
     print("Testing file operations...")
 
     # Create temporary files
@@ -77,19 +75,15 @@ def test_file_operations():
         key_hex = "000102030405060708090a0b0c0d0e0f"
         key_bytes = bytes.fromhex(key_hex)
 
-        # Read original file
         original_data = read_file_binary(original_path)
 
-        # Encrypt file data
         encrypted_data = ecb_encrypt(key_bytes, original_data)
         write_file_binary(encrypted_path, encrypted_data)
 
-        # Decrypt file data
         encrypted_data_read = read_file_binary(encrypted_path)
         decrypted_data = ecb_decrypt(key_bytes, encrypted_data_read)
         write_file_binary(decrypted_path, decrypted_data)
 
-        # Verify round-trip
         assert decrypted_data == original_data, "File round-trip failed"
 
         print(f"  ✓ File encryption/decryption successful")
@@ -98,14 +92,12 @@ def test_file_operations():
         print(f"  ✓ Decrypted: {len(decrypted_data)} bytes")
 
     finally:
-        # Cleanup
         for path in [original_path, encrypted_path, decrypted_path]:
             if os.path.exists(path):
                 os.unlink(path)
 
 
 def main():
-    """Run all tests"""
     print("Running CryptoCore tests...\n")
 
     try:

@@ -16,7 +16,7 @@ def ctr_encrypt(key, plaintext):
     for i in range(0, len(plaintext), 16):
         block = plaintext[i:i + 16]
 
-        counter_block = nonce + struct.pack('<Q', counter)  # Little-endian counter
+        counter_block = nonce + struct.pack('<Q', counter)
 
         keystream_block = cipher.encrypt(counter_block)
 

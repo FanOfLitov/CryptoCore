@@ -57,7 +57,6 @@ Examples:
         parser.print_help()
         sys.exit(1)
 
-    # Validate encryption-specific arguments
     if args.command == 'dgst' and args.hmac:
         if not args.key:
             print("Error: --key is required when using --hmac", file=sys.stderr)
@@ -94,12 +93,11 @@ Examples:
             print("Warning: IV is auto-generated during encryption", file=sys.stderr)
             args.iv = None
 
-    # Validate input file exists
     if not os.path.exists(args.input):
         print(f"Error: Input file '{args.input}' does not exist", file=sys.stderr)
         sys.exit(1)
 
-    # Set default output filename for encryption
+
     if args.command == 'encrypt' and not args.output:
         args.output = derive_output_filename(args.input, getattr(args, 'encrypt', False))
 
@@ -107,7 +105,7 @@ Examples:
 
 
 def validate_key(key_str):
-    """Validate that key is a 32-character hex string"""
+
     if len(key_str) != 32:
         return False
     try:
@@ -118,7 +116,7 @@ def validate_key(key_str):
 
 
 def is_weak_key(key_str):
-    """Check if key is weak"""
+
     key_bytes = bytes.fromhex(key_str)
 
     if all(b == 0 for b in key_bytes):
@@ -131,7 +129,6 @@ def is_weak_key(key_str):
 
 
 def derive_output_filename(input_path, is_encrypt):
-    """Derive default output filename"""
     if is_encrypt:
         return input_path + '.enc'
     else:

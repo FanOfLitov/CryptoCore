@@ -26,7 +26,7 @@ def test_aead_roundtrip_and_tamper(encrypt_func, decrypt_func, name: str):
     recovered = etm_decrypt(decrypt_func, master_key, out)
     assert recovered == plaintext, "Roundtrip failed"
 
-    # Tamper ciphertext (somewhere before tag)
+
     out_t = tamper(out, 10)
     try:
         etm_decrypt(decrypt_func, master_key, out_t)
@@ -34,7 +34,7 @@ def test_aead_roundtrip_and_tamper(encrypt_func, decrypt_func, name: str):
     except ValueError:
         pass
 
-    # Tamper tag (last byte)
+
     out_t = tamper(out, len(out) - 1)
     try:
         etm_decrypt(decrypt_func, master_key, out_t)
@@ -42,7 +42,7 @@ def test_aead_roundtrip_and_tamper(encrypt_func, decrypt_func, name: str):
     except ValueError:
         pass
 
-    # Tamper IV/nonce (first byte)
+
     out_t = tamper(out, 0)
     try:
         etm_decrypt(decrypt_func, master_key, out_t)
