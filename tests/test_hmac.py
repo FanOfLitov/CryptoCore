@@ -1,4 +1,4 @@
-from .mac.hmac import HMAC
+from src.mac.hmac import HMAC
 
 def test_rfc_4231_vectors():
     tests = [

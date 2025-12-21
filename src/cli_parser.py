@@ -27,6 +27,9 @@ Examples:
     encrypt_parser.add_argument('--algorithm', required=True, choices=['aes'])
     encrypt_parser.add_argument('--mode', required=True, choices=['ecb', 'cbc', 'cfb', 'ofb', 'ctr'])
 
+    encrypt_parser.add_argument('--aead', action='store_true', help='Enable AEAD (Encrypt-then-MAC)')
+
+
     operation_group = encrypt_parser.add_mutually_exclusive_group(required=True)
     operation_group.add_argument('--encrypt', action='store_true')
     operation_group.add_argument('--decrypt', action='store_true')
@@ -66,9 +69,15 @@ Examples:
             sys.exit(1)
 
     if args.command == 'encrypt':
-        if args.key and not validate_key(args.key):
-            print(f"Error: Key must be a 32-character hexadecimal string", file=sys.stderr)
-            sys.exit(1)
+        if args.key:
+            if args.aead:
+                if not validate_hex_len(args.key, 96):
+                    print("Error: AEAD requires --key as 96-hex chars (48 bytes)", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                if not validate_key(args.key):
+                    print("Error: Key must be a 32-character hexadecimal string", file=sys.stderr)
+                    sys.exit(1)
 
         if args.key and is_weak_key(args.key):
             print(f"Warning: The provided key appears to be weak", file=sys.stderr)

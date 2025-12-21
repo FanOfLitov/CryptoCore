@@ -9,10 +9,10 @@ import subprocess
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from modes.cbc import cbc_encrypt, cbc_decrypt
-from modes.cfb import cfb_encrypt, cfb_decrypt
-from modes.ofb import ofb_encrypt, ofb_decrypt
-from modes.ctr import ctr_encrypt, ctr_decrypt
+from src.modes.cbc import cbc_encrypt, cbc_decrypt
+from src.modes.cfb import cfb_encrypt, cfb_decrypt
+from src.modes.ofb import ofb_encrypt, ofb_decrypt
+from src.modes.ctr import ctr_encrypt, ctr_decrypt
 
 
 def test_all_modes_roundtrip():
@@ -62,4 +62,4 @@ def test_openssl_interoperability():
 
 if __name__ == "__main__":
     test_all_modes_roundtrip()
-    print("\n🎉 All mode tests passed!")
+    print("\n All mode tests passed!")

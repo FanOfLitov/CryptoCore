@@ -8,8 +8,8 @@ import tempfile
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from file_io import read_file_binary, write_file_binary
-from modes.ecb import ecb_encrypt, ecb_decrypt, pkcs7_pad, pkcs7_unpad
-
+from src.modes.ecb import ecb_encrypt, ecb_decrypt
+from src.file_io import pkcs7_pad, pkcs7_unpad
 
 def test_padding():
     """Test PKCS#7 padding and unpadding"""
@@ -114,10 +114,10 @@ def main():
         test_encrypt_decrypt_roundtrip()
         print()
         test_file_operations()
-        print("\n🎉 All tests passed!")
+        print("\n All tests passed!")
 
     except Exception as e:
-        print(f"\n❌ Test failed: {e}")
+        print(f"\n Test failed: {e}")
         sys.exit(1)
 
 

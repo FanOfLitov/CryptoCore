@@ -12,6 +12,8 @@ from .modes.cfb import cfb_encrypt, cfb_decrypt
 from .modes.ofb import ofb_encrypt, ofb_decrypt
 from .modes.ctr import ctr_encrypt, ctr_decrypt
 
+from .aead.etm import etm_encrypt
+
 
 
 from .hash.sha256 import sha256_file
@@ -26,80 +28,36 @@ def extract_iv(ciphertext: bytes) -> tuple[bytes, bytes]:
 
 
 def handle_decryption(args, input_data):
-    """Handle decryption operation with automatic IV extraction."""
+    """Handle decryption operation"""
+
+    from .aead.etm import etm_decrypt
 
     if not args.key:
         raise ValueError("Key is required for decryption")
 
-    key_bytes = bytes.fromhex(args.key)
-
-    crypto_functions = {
-        'ecb': (ecb_encrypt, ecb_decrypt),
-        'cbc': (cbc_encrypt, cbc_decrypt),
-        'cfb': (cfb_encrypt, cfb_decrypt),
-        'ofb': (ofb_encrypt, ofb_decrypt),
-        'ctr': (ctr_encrypt, ctr_decrypt),
+    # Map mode -> decrypt function
+    crypto_decrypt = {
+        'ecb': ecb_decrypt,
+        'cbc': cbc_decrypt,
+        'cfb': cfb_decrypt,
+        'ofb': ofb_decrypt,
+        'ctr': ctr_decrypt,
     }
 
-    _, decrypt_func = crypto_functions.get(args.mode, (None, None))
+    decrypt_func = crypto_decrypt.get(args.mode)
     if not decrypt_func:
         raise ValueError(f"Unsupported mode {args.mode}")
 
-    # ECB: no IV
-    if args.mode == 'ecb':
-        return decrypt_func(key_bytes, input_data), None
+    # AEAD mode (Verify-then-Decrypt)
+    if getattr(args, 'aead', False):
+        master_key = bytes.fromhex(args.key)
+        pt = etm_decrypt(decrypt_func, master_key, input_data)
+        return pt, None
 
-    # OTHER MODES: must handle IV
-    if args.iv:
-        # explicit IV from user
-        iv_bytes = bytes.fromhex(args.iv)
-        ciphertext = input_data
-    else:
-        # IO-2: Read IV from file
-        iv_bytes, ciphertext = extract_iv(input_data)
-
-    # (IO-3) IV must be 16 bytes
-    if len(iv_bytes) != 16:
-        raise ValueError("IV must be exactly 16 bytes")
-
-    # decrypt_func for your modes expects: (key, iv + ciphertext)
-    combined = iv_bytes + ciphertext
-
-    plaintext = decrypt_func(key_bytes, combined)
-    return plaintext, None
-
-
-def handle_decryption(args, input_data):
-    """Handle decryption operation"""
+    # Non-AEAD mode (legacy)
     key_bytes = bytes.fromhex(args.key)
-
-    crypto_functions = {
-        'ecb': (ecb_encrypt, ecb_decrypt),
-        'cbc': (cbc_encrypt, cbc_decrypt),
-        'cfb': (cfb_encrypt, cfb_decrypt),
-        'ofb': (ofb_encrypt, ofb_decrypt),
-        'ctr': (ctr_encrypt, ctr_decrypt),
-    }
-
-    _, decrypt_func = crypto_functions.get(args.mode, (None, None))
-
-    if not decrypt_func:
-        print(f"Error: Unsupported mode {args.mode}", file=sys.stderr)
-        sys.exit(1)
-
-    if args.mode == 'ecb':
-        return decrypt_func(key_bytes, input_data), None
-    else:
-        if args.iv:
-            iv_bytes = bytes.fromhex(args.iv)
-            ciphertext_with_iv = iv_bytes + input_data
-        else:
-            if len(input_data) < 16:
-                print(f"Error: Input file too short to contain IV", file=sys.stderr)
-                sys.exit(1)
-            ciphertext_with_iv = input_data
-
-        return decrypt_func(key_bytes, ciphertext_with_iv), None
+    pt = decrypt_func(key_bytes, input_data)
+    return pt, None
 
 
 def handle_hash(args):
@@ -185,13 +143,13 @@ def handle_hash(args):
 
 
 def handle_encryption(args, input_data):
-    if args.key:
-        key_bytes = bytes.fromhex(args.key)
-    else:
-        key_bytes = generate_key()
-        print(f"[INFO] Generated random key: {key_bytes.hex()}")
+    """Handle encryption operation"""
 
-    crypto_functions = {
+    from .aead.etm import etm_encrypt
+    from .csprng import generate_random_bytes, generate_key
+
+    # Map mode -> encrypt function
+    crypto_encrypt = {
         'ecb': ecb_encrypt,
         'cbc': cbc_encrypt,
         'cfb': cfb_encrypt,
@@ -199,12 +157,32 @@ def handle_encryption(args, input_data):
         'ctr': ctr_encrypt,
     }
 
-    encrypt_func = crypto_functions.get(args.mode)
+    encrypt_func = crypto_encrypt.get(args.mode)
     if not encrypt_func:
         raise ValueError(f"Unsupported mode {args.mode}")
 
-    output = encrypt_func(key_bytes, input_data)
-    return output, None
+    # AEAD mode (Encrypt-then-MAC)
+    if getattr(args, 'aead', False):
+        if args.key:
+            master_key = bytes.fromhex(args.key)
+        else:
+            # Generate 32-byte master key for AEAD
+            master_key = generate_random_bytes(32)
+            print(f"[INFO] Generated AEAD master key: {master_key.hex()}")
+
+        out = etm_encrypt(encrypt_func, master_key, input_data)
+        return out, None
+
+    # Non-AEAD mode (legacy)
+    if args.key:
+        key_bytes = bytes.fromhex(args.key)
+    else:
+        key_bytes = generate_key()
+        print(f"[INFO] Generated random key: {key_bytes.hex()}")
+
+    out = encrypt_func(key_bytes, input_data)
+    return out, None
+
 
 
 def main():
