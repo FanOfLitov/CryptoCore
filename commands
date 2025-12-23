@@ -1,0 +1,43 @@
+python3 -m src.main --help
+
+
+python -m src.main encrypt --algorithm aes --mode cbc --encrypt --input logosam.jpg --output logo.bin
+
+chmod +x run_all_tests.sh
+./run_all_tests.sh
+
+OpenSSL-совместимость
+
+openssl enc -aes-128-cbc -e \
+  -K 00112233445566778899aabbccddeeff \
+  -iv 0102030405060708090a0b0c0d0e0f10 \
+  -in test.txt -out ossl.enc
+
+
+python -m src.main encrypt --algorithm aes --mode cbc --decrypt \
+  --key 00112233445566778899aabbccddeeff \
+  --input ossl.enc --output test.dec
+
+
+AEAD demo:
+
+python3 -m src.main encrypt --algorithm aes --mode cbc --encrypt --aead \
+  --input test.txt --output test.aead
+
+
+NIST bits:
+
+python3 scripts/bin_to_nist_bits.py test.aead bits.txt
+
+
+NIST Command prompt
+./assess 800000
+И выбираешь:
+
+Frequency
+
+Block Frequency
+
+Runs
+
+Longest Run
