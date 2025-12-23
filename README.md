@@ -142,8 +142,8 @@ HMAC-SHA256 от файла:
 MODE ∈ { ecb, cbc, cfb, ofb, ctr }
 
 Пример CBC:
-  python -m src.main encrypt --algorithm aes --mode cbc --encrypt --key 001122... --input test.txt --output test.enc
-  python -m src.main encrypt --algorithm aes --mode cbc --decrypt --key 001122... --input test.enc --output test.dec
+  python -m src.main encrypt --algorithm aes --mode cbc --encrypt --key c6da13e968a81ffe91b4de4a3e4c3e22 --input test.txt --output test.enc
+  python -m src.main encrypt --algorithm aes --mode cbc --decrypt --key c6da13e968a81ffe91b4de4a3e4c3e22 --input test.enc --output test.dec
 
 Про IV/nonce:
 - В режимах CBC/CFB/OFB/CTR обычно используется IV/nonce, который генерируется CSPRNG
