@@ -99,6 +99,24 @@ CryptoCore/
 
 Примеры ниже предполагают, что вы находитесь в корне проекта.
 
+
+# Создадим тестовый файл
+echo "This is a test message for AES-CBC" > test.txt
+
+# Шифруем
+python -m src.main encrypt --algorithm aes --mode cbc --encrypt \
+  --key 00112233445566778899aabbccddeeff \
+  --input test.txt --output test.cbc
+
+# Дешифруем
+python -m src.main encrypt --algorithm aes --mode cbc --decrypt \
+  --key 00112233445566778899aabbccddeeff \
+  --input test.cbc --output test_dec.txt
+
+# Проверяем
+cat test_dec.txt
+
+
 4.1. Хэширование (dgst)
 
 SHA-256:
